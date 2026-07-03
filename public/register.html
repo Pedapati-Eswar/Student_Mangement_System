@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMS - Register</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 520px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+  h2 { color: white; text-align: center; margin-bottom: 8px; font-size: 24px; }
+  .subtitle { color: rgba(255,255,255,0.4); text-align: center; font-size: 13px; margin-bottom: 30px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+  .full { grid-column: 1 / -1; }
+  .form-group { display: flex; flex-direction: column; }
+  label { color: rgba(255,255,255,0.7); font-size: 12px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea { padding: 11px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; transition: border 0.3s; }
+  input:focus, select:focus, textarea:focus { border-color: #e94560; }
+  input::placeholder, textarea::placeholder { color: rgba(255,255,255,0.3); }
+  select option { background: #1a1a2e; }
+  textarea { resize: none; height: 70px; }
+  .strength { height: 4px; border-radius: 2px; margin-top: 6px; background: rgba(255,255,255,0.1); overflow: hidden; }
+  .strength-bar { height: 100%; width: 0; transition: all 0.3s; border-radius: 2px; }
+  .btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #e94560, #c23152); border: none; border-radius: 10px; color: white; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 20px; transition: opacity 0.3s; }
+  .btn:hover { opacity: 0.85; }
+  .msg { text-align: center; margin-top: 15px; font-size: 13px; padding: 10px; border-radius: 8px; display: none; }
+  .msg.error { background: rgba(233,69,96,0.2); color: #e94560; display: block; }
+  .msg.success { background: rgba(46,213,115,0.2); color: #2ed573; display: block; }
+  .footer { text-align: center; margin-top: 15px; color: rgba(255,255,255,0.4); font-size: 13px; }
+  .footer a { color: #e94560; text-decoration: none; }
+  .req { color: #e94560; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>📝 Create Account</h2>
+  <p class="subtitle">Fill in your details to register</p>
+  <div class="grid">
+    <div class="form-group full">
+      <label>Full Name <span class="req">*</span></label>
+      <input id="fullName" placeholder="John Doe">
+    </div>
+    <div class="form-group">
+      <label>Username <span class="req">*</span></label>
+      <input id="username" placeholder="john_doe" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>Email <span class="req">*</span></label>
+      <input id="email" type="email" placeholder="john@example.com">
+    </div>
+    <div class="form-group">
+      <label>Password <span class="req">*</span></label>
+      <input id="password" type="password" placeholder="Min 6 characters" oninput="checkStrength(this.value)">
+      <div class="strength"><div class="strength-bar" id="sbar"></div></div>
+    </div>
+    <div class="form-group">
+      <label>Confirm Password <span class="req">*</span></label>
+      <input id="confirm" type="password" placeholder="Repeat password">
+    </div>
+    <div class="form-group">
+      <label>Course <span class="req">*</span></label>
+      <select id="course">
+        <option value="">Select Course</option>
+        <option>B.Tech CSE</option>
+        <option>B.Tech ECE</option>
+        <option>B.Tech ME</option>
+        <option>B.Tech Civil</option>
+        <option>BCA</option>
+        <option>MCA</option>
+        <option>MBA</option>
+        <option>B.Sc</option>
+        <option>M.Sc</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Mobile <span class="req">*</span></label>
+      <input id="mobile" placeholder="10-digit number" maxlength="10">
+    </div>
+    <div class="form-group">
+      <label>Gender <span class="req">*</span></label>
+      <select id="gender">
+        <option value="">Select Gender</option>
+        <option>Male</option>
+        <option>Female</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Date of Birth <span class="req">*</span></label>
+      <input id="dob" type="date">
+    </div>
+    <div class="form-group full">
+      <label>Address</label>
+      <textarea id="address" placeholder="Your address (optional)"></textarea>
+    </div>
+  </div>
+  <button class="btn" onclick="register()">Create Account</button>
+  <div id="msg" class="msg"></div>
+  <div class="footer">Already have an account? <a href="index.html">Login</a></div>
+</div>
+
+<script>
+function checkStrength(val) {
+  const bar = document.getElementById('sbar');
+  let score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val)) score++;
+  if (/[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  const colors = ['#e94560','#ff6b35','#ffa502','#2ed573','#1e90ff'];
+  bar.style.width = (score * 20) + '%';
+  bar.style.background = colors[score - 1] || '#e94560';
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = 'msg ' + type;
+}
+
+async function register() {
+  const fields = { fullName, username, email, password, course, mobile, gender, dob };
+  for (const [k, el] of Object.entries(fields)) {
+    if (!document.getElementById(k).value.trim()) return showMsg(`${k} is required`, 'error');
+  }
+  if (document.getElementById('password').value !== document.getElementById('confirm').value)
+    return showMsg('Passwords do not match', 'error');
+  if (document.getElementById('password').value.length < 6)
+    return showMsg('Password must be at least 6 characters', 'error');
+  if (!/^\d{10}$/.test(document.getElementById('mobile').value))
+    return showMsg('Mobile must be 10 digits', 'error');
+
+  const body = {
+    fullName: document.getElementById('fullName').value.trim(),
+    username: document.getElementById('username').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    password: document.getElementById('password').value,
+    course: document.getElementById('course').value,
+    mobile: document.getElementById('mobile').value,
+    gender: document.getElementById('gender').value,
+    dob: document.getElementById('dob').value,
+    address: document.getElementById('address').value.trim()
+  };
+
+  try {
+    const res = await fetch('/register', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg(data.message, 'error');
+    showMsg('Registered successfully! Redirecting...', 'success');
+    setTimeout(() => location.href = 'index.html', 1500);
+  } catch { showMsg('Server error. Try again.', 'error'); }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMS - Admin Panel</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: #0f0f1a; color: white; min-height: 100vh; }
+  .navbar { background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+  .navbar h1 { color: #e94560; font-size: 20px; }
+  .btn-logout { background: rgba(233,69,96,0.2); border: 1px solid #e94560; color: #e94560; padding: 7px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+  .container { max-width: 1200px; margin: 0 auto; padding: 30px 20px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+  .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; text-align: center; }
+  .stat-card .val { font-size: 30px; font-weight: bold; color: #e94560; }
+  .stat-card .lbl { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 5px; text-transform: uppercase; }
+  .toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .search-box { flex: 1; min-width: 200px; padding: 10px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; }
+  .search-box::placeholder { color: rgba(255,255,255,0.3); }
+  select.filter { padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; }
+  select.filter option { background: #1a1a2e; }
+  .panel { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { color: rgba(255,255,255,0.5); text-align: left; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; text-transform: uppercase; background: rgba(255,255,255,0.03); }
+  td { padding: 13px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: middle; }
+  tr:hover td { background: rgba(255,255,255,0.03); }
+  .badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge.male { background: rgba(30,144,255,0.2); color: #1e90ff; }
+  .badge.female { background: rgba(255,105,180,0.2); color: hotpink; }
+  .badge.other { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6); }
+  .action-btns { display: flex; gap: 6px; }
+  .btn-sm { padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; border: none; font-weight: 600; }
+  .btn-view { background: rgba(30,144,255,0.2); color: #1e90ff; border: 1px solid #1e90ff; }
+  .btn-edit { background: rgba(255,165,0,0.2); color: orange; border: 1px solid orange; }
+  .btn-grade { background: rgba(46,213,115,0.2); color: #2ed573; border: 1px solid #2ed573; }
+  .btn-attend { background: rgba(155,89,182,0.2); color: #9b59b6; border: 1px solid #9b59b6; }
+  .btn-del { background: rgba(233,69,96,0.2); color: #e94560; border: 1px solid #e94560; }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 30px; width: 500px; max-height: 85vh; overflow-y: auto; }
+  .modal h3 { margin-bottom: 20px; color: white; font-size: 18px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; color: rgba(255,255,255,0.6); font-size: 12px; margin-bottom: 5px; }
+  .form-group input, .form-group select { width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; font-size: 14px; outline: none; }
+  .form-group select option { background: #1a1a2e; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-btns { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-save { flex: 1; padding: 11px; background: linear-gradient(135deg, #e94560, #c23152); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; }
+  .btn-cancel { flex: 1; padding: 11px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: white; cursor: pointer; }
+  .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  .info-row:last-child { border-bottom: none; }
+  .info-row span:first-child { color: rgba(255,255,255,0.5); }
+  .section-title { color: rgba(255,255,255,0.7); font-size: 13px; font-weight: 600; margin: 20px 0 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .empty { text-align: center; color: rgba(255,255,255,0.3); padding: 40px; font-size: 14px; }
+  .cgpa-badge { font-weight: bold; color: #e94560; }
+  .toast { position: fixed; bottom: 30px; right: 30px; background: #2ed573; color: #0f0f1a; padding: 12px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; z-index: 999; display: none; }
+  @media(max-width:768px) { .stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+<div class="navbar">
+  <h1>🛡️ Admin Panel</h1>
+  <button class="btn-logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="val" id="sTotal">-</div><div class="lbl">Total Students</div></div>
+    <div class="stat-card"><div class="val" id="sCgpa">-</div><div class="lbl">Avg CGPA</div></div>
+    <div class="stat-card"><div class="val" id="sCourses">-</div><div class="lbl">Courses</div></div>
+    <div class="stat-card"><div class="val" id="sToday">-</div><div class="lbl">Enrolled Today</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input class="search-box" id="searchInput" placeholder="🔍 Search by name, username, email..." oninput="filterStudents()">
+    <select class="filter" id="courseFilter" onchange="filterStudents()">
+      <option value="">All Courses</option>
+      <option>B.Tech CSE</option><option>B.Tech ECE</option><option>B.Tech ME</option>
+      <option>B.Tech Civil</option><option>BCA</option><option>MCA</option>
+      <option>MBA</option><option>B.Sc</option><option>M.Sc</option>
+    </select>
+    <select class="filter" id="genderFilter" onchange="filterStudents()">
+      <option value="">All Genders</option>
+      <option>Male</option><option>Female</option><option>Other</option>
+    </select>
+  </div>
+
+  <div class="panel">
+    <table>
+      <thead><tr>
+        <th>#</th><th>Name</th><th>Username</th><th>Course</th>
+        <th>Gender</th><th>CGPA</th><th>Enrolled</th><th>Actions</th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- View Modal -->
+<div class="modal-overlay" id="viewModal">
+  <div class="modal">
+    <h3>👤 Student Details</h3>
+    <div id="viewContent"></div>
+    <div class="modal-btns"><button class="btn-cancel" onclick="closeModal('viewModal')">Close</button></div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <h3>✏️ Edit Student</h3>
+    <input type="hidden" id="editId">
+    <div class="grid2">
+      <div class="form-group"><label>Full Name</label><input id="eFull"></div>
+      <div class="form-group"><label>Email</label><input id="eEmail" type="email"></div>
+      <div class="form-group"><label>Course</label>
+        <select id="eCourse">
+          <option>B.Tech CSE</option><option>B.Tech ECE</option><option>B.Tech ME</option>
+          <option>B.Tech Civil</option><option>BCA</option><option>MCA</option>
+          <option>MBA</option><option>B.Sc</option><option>M.Sc</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Mobile</label><input id="eMobile"></div>
+      <div class="form-group"><label>Gender</label>
+        <select id="eGender"><option>Male</option><option>Female</option><option>Other</option></select>
+      </div>
+      <div class="form-group"><label>Date of Birth</label><input id="eDob" type="date"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('editModal')">Cancel</button>
+      <button class="btn-save" onclick="saveEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Grade Modal -->
+<div class="modal-overlay" id="gradeModal">
+  <div class="modal">
+    <h3>📊 Add Grade</h3>
+    <input type="hidden" id="gradeStudentId">
+    <div class="form-group"><label>Subject</label><input id="gSubject" placeholder="e.g. Mathematics"></div>
+    <div class="grid2">
+      <div class="form-group"><label>Marks Obtained</label><input id="gMarks" type="number" min="0"></div>
+      <div class="form-group"><label>Max Marks</label><input id="gMax" type="number" min="1" value="100"></div>
+    </div>
+    <div class="form-group"><label>Semester</label>
+      <select id="gSem">
+        <option>Sem 1</option><option>Sem 2</option><option>Sem 3</option><option>Sem 4</option>
+        <option>Sem 5</option><option>Sem 6</option><option>Sem 7</option><option>Sem 8</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('gradeModal')">Cancel</button>
+      <button class="btn-save" onclick="addGrade()">Add Grade</button>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance Modal -->
+<div class="modal-overlay" id="attendModal">
+  <div class="modal">
+    <h3>📅 Mark Attendance</h3>
+    <input type="hidden" id="attendStudentId">
+    <div class="form-group"><label>Subject</label><input id="aSubject" placeholder="e.g. Mathematics"></div>
+    <div class="form-group"><label>Date</label><input id="aDate" type="date"></div>
+    <div class="form-group"><label>Status</label>
+      <select id="aStatus"><option>Present</option><option>Absent</option><option>Late</option></select>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal('attendModal')">Cancel</button>
+      <button class="btn-save" onclick="markAttendance()">Mark</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const token = localStorage.getItem('token');
+if (!token) location.href = 'index.html';
+
+let allStudents = [];
+
+function showToast(msg, color = '#2ed573') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.style.background = color; t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+async function apiFetch(url, opts = {}) {
+  opts.headers = { ...opts.headers, Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' };
+  const res = await fetch(url, opts);
+  if (res.status === 401) return logout();
+  return res;
+}
+
+async function loadStats() {
+  const res = await apiFetch('/stats');
+  const data = await res.json();
+  document.getElementById('sTotal').textContent = data.total;
+  document.getElementById('sCgpa').textContent = data.avgCgpa;
+  document.getElementById('sCourses').textContent = Object.keys(data.courses).length;
+}
+
+async function loadStudents() {
+  const res = await apiFetch('/students');
+  allStudents = await res.json();
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('sToday').textContent = allStudents.filter(s => s.enrolledDate === today).length;
+  renderTable(allStudents);
+}
+
+function renderTable(students) {
+  const tbody = document.getElementById('tbody');
+  if (!students.length) { tbody.innerHTML = '<tr><td colspan="8"><div class="empty">No students found</div></td></tr>'; return; }
+  tbody.innerHTML = students.map((s, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${s.fullName}</strong><br><small style="color:rgba(255,255,255,0.4)">${s.email}</small></td>
+      <td>${s.username}</td>
+      <td>${s.course}</td>
+      <td><span class="badge ${s.gender.toLowerCase()}">${s.gender}</span></td>
+      <td><span class="cgpa-badge">${s.cgpa || '0.00'}</span></td>
+      <td>${s.enrolledDate}</td>
+      <td>
+        <div class="action-btns">
+          <button class="btn-sm btn-view" onclick="viewStudent('${s.id}')">View</button>
+          <button class="btn-sm btn-edit" onclick="editStudent('${s.id}')">Edit</button>
+          <button class="btn-sm btn-grade" onclick="openGrade('${s.id}')">Grade</button>
+          <button class="btn-sm btn-attend" onclick="openAttend('${s.id}')">Attend</button>
+          <button class="btn-sm btn-del" onclick="deleteStudent('${s.id}', '${s.fullName}')">Del</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function filterStudents() {
+  const search = document.getElementById('searchInput').value.toLowerCase();
+  const course = document.getElementById('courseFilter').value;
+  const gender = document.getElementById('genderFilter').value;
+  renderTable(allStudents.filter(s =>
+    (!search || s.fullName.toLowerCase().includes(search) || s.username.toLowerCase().includes(search) || s.email.toLowerCase().includes(search)) &&
+    (!course || s.course === course) &&
+    (!gender || s.gender === gender)
+  ));
+}
+
+function viewStudent(id) {
+  const s = allStudents.find(x => x.id === id);
+  const attend = s.attendance || [];
+  const present = attend.filter(a => a.status === 'Present').length;
+  const pct = attend.length ? Math.round((present / attend.length) * 100) : 0;
+  document.getElementById('viewContent').innerHTML = `
+    ${[['Full Name',s.fullName],['Username',s.username],['Email',s.email],['Course',s.course],
+       ['Mobile',s.mobile],['Gender',s.gender],['DOB',s.dob],['Enrolled',s.enrolledDate],
+       ['CGPA',s.cgpa||'0.00'],['Attendance',pct+'%'],['Address',s.address||'-']]
+      .map(([k,v])=>`<div class="info-row"><span>${k}</span><span>${v}</span></div>`).join('')}
+    <div class="section-title">Grades (${(s.grades||[]).length})</div>
+    ${(s.grades||[]).length ? `<table><thead><tr><th>Subject</th><th>Sem</th><th>Marks</th></tr></thead><tbody>
+      ${s.grades.map(g=>`<tr><td>${g.subject}</td><td>${g.semester}</td><td>${g.marks}/${g.maxMarks}</td></tr>`).join('')}
+    </tbody></table>` : '<div style="color:rgba(255,255,255,0.3);font-size:13px">No grades</div>'}
+    <div class="section-title">Attendance (${attend.length})</div>
+    ${attend.length ? `<table><thead><tr><th>Date</th><th>Subject</th><th>Status</th></tr></thead><tbody>
+      ${attend.slice().reverse().slice(0,10).map(a=>`<tr><td>${a.date}</td><td>${a.subject}</td><td>${a.status}</td></tr>`).join('')}
+    </tbody></table>` : '<div style="color:rgba(255,255,255,0.3);font-size:13px">No records</div>'}`;
+  openModal('viewModal');
+}
+
+function editStudent(id) {
+  const s = allStudents.find(x => x.id === id);
+  document.getElementById('editId').value = s.id;
+  document.getElementById('eFull').value = s.fullName;
+  document.getElementById('eEmail').value = s.email;
+  document.getElementById('eCourse').value = s.course;
+  document.getElementById('eMobile').value = s.mobile;
+  document.getElementById('eGender').value = s.gender;
+  document.getElementById('eDob').value = s.dob;
+  openModal('editModal');
+}
+
+async function saveEdit() {
+  const id = document.getElementById('editId').value;
+  const body = {
+    fullName: document.getElementById('eFull').value,
+    email: document.getElementById('eEmail').value,
+    course: document.getElementById('eCourse').value,
+    mobile: document.getElementById('eMobile').value,
+    gender: document.getElementById('eGender').value,
+    dob: document.getElementById('eDob').value
+  };
+  const res = await apiFetch('/students/' + id, { method: 'PUT', body: JSON.stringify(body) });
+  if (res.ok) { closeModal('editModal'); showToast('Student updated!'); loadStudents(); loadStats(); }
+}
+
+async function deleteStudent(id, name) {
+  if (!confirm(`Delete ${name}?`)) return;
+  const res = await apiFetch('/students/' + id, { method: 'DELETE' });
+  if (res.ok) { showToast('Student deleted', '#e94560'); loadStudents(); loadStats(); }
+}
+
+function openGrade(id) {
+  document.getElementById('gradeStudentId').value = id;
+  document.getElementById('gSubject').value = '';
+  document.getElementById('gMarks').value = '';
+  document.getElementById('gMax').value = '100';
+  openModal('gradeModal');
+}
+
+async function addGrade() {
+  const id = document.getElementById('gradeStudentId').value;
+  const body = {
+    subject: document.getElementById('gSubject').value,
+    marks: parseInt(document.getElementById('gMarks').value),
+    maxMarks: parseInt(document.getElementById('gMax').value),
+    semester: document.getElementById('gSem').value
+  };
+  if (!body.subject || isNaN(body.marks)) return alert('Fill all fields');
+  const res = await apiFetch('/students/' + id + '/grades', { method: 'POST', body: JSON.stringify(body) });
+  if (res.ok) { closeModal('gradeModal'); showToast('Grade added!'); loadStudents(); loadStats(); }
+}
+
+function openAttend(id) {
+  document.getElementById('attendStudentId').value = id;
+  document.getElementById('aDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('aSubject').value = '';
+  openModal('attendModal');
+}
+
+async function markAttendance() {
+  const id = document.getElementById('attendStudentId').value;
+  const body = {
+    subject: document.getElementById('aSubject').value,
+    date: document.getElementById('aDate').value,
+    status: document.getElementById('aStatus').value
+  };
+  if (!body.subject) return alert('Enter subject');
+  const res = await apiFetch('/students/' + id + '/attendance', { method: 'POST', body: JSON.stringify(body) });
+  if (res.ok) { closeModal('attendModal'); showToast('Attendance marked!'); loadStudents(); }
+}
+
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function logout() { localStorage.clear(); location.href = 'index.html'; }
+
+loadStats();
+loadStudents();
+</script>
+</body>
+</html>

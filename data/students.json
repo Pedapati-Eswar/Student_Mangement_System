@@ -1,0 +1,33 @@
+[
+  {
+    "id": "1782276241738",
+    "username": "eswar",
+    "password": "$2b$10$lnxDQd7CwxMqbnXr9EhmXuabVPXLzPazHC.birruuOrTGxM5.5Miq",
+    "fullName": "Eswar Pedapati",
+    "email": "eswar@gmail.com",
+    "course": "B.Tech CSE",
+    "mobile": "9381176123",
+    "gender": "Male",
+    "dob": "2026-06-02",
+    "address": "",
+    "role": "student",
+    "enrolledDate": "2026-06-24",
+    "grades": [
+      {
+        "subject": "math",
+        "marks": 100,
+        "maxMarks": 100,
+        "semester": "Sem 1",
+        "date": "2026-06-24"
+      }
+    ],
+    "attendance": [
+      {
+        "date": "2026-06-24",
+        "status": "Present",
+        "subject": "maths"
+      }
+    ],
+    "cgpa": "10.00"
+  }
+]

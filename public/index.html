@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMS - Login</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+  .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 40px; width: 400px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+  .logo { text-align: center; margin-bottom: 30px; }
+  .logo h1 { color: #e94560; font-size: 28px; letter-spacing: 2px; }
+  .logo p { color: rgba(255,255,255,0.5); font-size: 13px; margin-top: 5px; }
+  .tabs { display: flex; background: rgba(255,255,255,0.05); border-radius: 10px; padding: 4px; margin-bottom: 25px; }
+  .tab { flex: 1; padding: 10px; text-align: center; border-radius: 8px; cursor: pointer; color: rgba(255,255,255,0.5); font-size: 14px; transition: all 0.3s; }
+  .tab.active { background: #e94560; color: white; font-weight: 600; }
+  .form-group { margin-bottom: 18px; }
+  label { display: block; color: rgba(255,255,255,0.7); font-size: 13px; margin-bottom: 6px; }
+  input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; transition: border 0.3s; }
+  input:focus { border-color: #e94560; }
+  input::placeholder { color: rgba(255,255,255,0.3); }
+  .btn { width: 100%; padding: 13px; background: linear-gradient(135deg, #e94560, #c23152); border: none; border-radius: 10px; color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.3s; margin-top: 5px; }
+  .btn:hover { opacity: 0.85; }
+  .msg { text-align: center; margin-top: 15px; font-size: 13px; padding: 10px; border-radius: 8px; display: none; }
+  .msg.error { background: rgba(233,69,96,0.2); color: #e94560; display: block; }
+  .msg.success { background: rgba(46,213,115,0.2); color: #2ed573; display: block; }
+  .footer { text-align: center; margin-top: 20px; color: rgba(255,255,255,0.4); font-size: 13px; }
+  .footer a { color: #e94560; text-decoration: none; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <h1>📚 SMS</h1>
+    <p>Student Management System</p>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('student')">Student</div>
+    <div class="tab" onclick="switchTab('admin')">Admin</div>
+  </div>
+  <div class="form-group">
+    <label>Username</label>
+    <input id="username" placeholder="Enter username" autocomplete="off">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input id="password" type="password" placeholder="Enter password">
+  </div>
+  <button class="btn" onclick="login()">Login</button>
+  <div id="msg" class="msg"></div>
+  <div class="footer" id="regLink">Don't have an account? <a href="register.html">Register</a></div>
+</div>
+
+<script>
+let currentTab = 'student';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', (i === 0 && tab === 'student') || (i === 1 && tab === 'admin')));
+  document.getElementById('regLink').style.display = tab === 'student' ? 'block' : 'none';
+  showMsg('', '');
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text;
+  el.className = 'msg' + (type ? ' ' + type : '');
+}
+
+async function login() {
+  const username = document.getElementById('username').value.trim();
+  const password = document.getElementById('password').value;
+  if (!username || !password) return showMsg('Please fill all fields', 'error');
+
+  const endpoint = currentTab === 'admin' ? '/admin-login' : '/login';
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if (!res.ok) return showMsg(data.message, 'error');
+
+    localStorage.setItem('token', data.token);
+    if (currentTab === 'admin') {
+      location.href = 'admin.html';
+    } else {
+      localStorage.setItem('user', JSON.stringify(data.user));
+      location.href = 'dashboard.html';
+    }
+  } catch { showMsg('Server error. Try again.', 'error'); }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+</script>
+</body>
+</html>
